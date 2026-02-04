@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://saransiriprapha-party.vercel.app/sitemap.xml
