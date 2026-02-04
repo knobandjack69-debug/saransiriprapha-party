@@ -4,6 +4,12 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Sarunsiriprapha Party</title>
+    <!-- Preconnect to image hosting domains -->
+    <link rel="preconnect" href="https://img2.pic.in.th">
+    <link rel="preconnect" href="https://img5.pic.in.th">
+    <link rel="dns-prefetch" href="https://img2.pic.in.th">
+    <link rel="dns-prefetch" href="https://img5.pic.in.th">
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
@@ -51,6 +57,17 @@
       body {
         background-color: #EFECE1;
         color: #1F1F1F;
+      }
+
+      /* Image loading transition for better UX */
+      img {
+        transition: opacity 0.5s ease-in-out;
+      }
+      img:not([src]) {
+        opacity: 0;
+      }
+      img[src] {
+        opacity: 1;
       }
     </style>
   <script type="importmap">
