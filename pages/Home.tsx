@@ -9,6 +9,7 @@ interface HomeProps {
 
 export const Home: React.FC<HomeProps> = ({ content }) => {
   const [isVisible, setIsVisible] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
     setIsVisible(true);
@@ -17,21 +18,28 @@ export const Home: React.FC<HomeProps> = ({ content }) => {
   return (
     <div className="w-full bg-party-cream overflow-x-hidden">
       {/* SECTION 1: HERO */}
-      <section className="relative min-h-[90vh] md:min-h-screen flex flex-col justify-center overflow-hidden">
+      <section className="relative min-h-[90vh] md:min-h-screen flex flex-col justify-center overflow-hidden bg-party-beige">
         
-        {/* Background Image Layer - Priority: High for LCP */}
-        <div className="absolute inset-0 z-0">
+        {/* Background Image Layer */}
+        <div className={`absolute inset-0 z-0 transition-opacity duration-1000 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}>
            <img 
              src="https://img5.pic.in.th/file/secure-sv1/S__3366942.jpg"
              alt="Party Background"
-             className="w-full h-full object-cover"
+             className="w-full h-full object-cover parallax-img"
              fetchPriority="high"
              decoding="async"
+             onLoad={() => setIsLoaded(true)}
            />
-           <div className="absolute inset-0 bg-gradient-to-t from-party-cream/30 via-transparent to-transparent"></div>
-           <div className="absolute inset-0 bg-gradient-to-r from-party-cream/30 via-party-rose/5 to-transparent"></div>
-           <div className="absolute inset-0 bg-white/5 backdrop-blur-[0.5px]"></div>
+           <div className="absolute inset-0 bg-gradient-to-t from-party-cream via-transparent to-transparent opacity-80"></div>
+           <div className="absolute inset-0 bg-white/10 backdrop-blur-[0.5px]"></div>
         </div>
+
+        {/* Loading Placeholder */}
+        {!isLoaded && (
+          <div className="absolute inset-0 z-0 bg-party-beige flex items-center justify-center">
+             <div className="w-12 h-12 border-4 border-party-rose/20 border-t-party-rose rounded-full animate-spin"></div>
+          </div>
+        )}
 
         <div className="container mx-auto px-6 md:px-12 relative z-10 pt-20">
           <div className="flex flex-col md:flex-row items-center justify-between">

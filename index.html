@@ -4,6 +4,11 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Sarunsiriprapha Party</title>
+    
+    <!-- Preload Critical LCP Images -->
+    <link rel="preload" as="image" href="https://img5.pic.in.th/file/secure-sv1/S__3366942.jpg" fetchpriority="high">
+    <link rel="preload" as="image" href="https://img2.pic.in.th/Sarun-Siriprapha.png" fetchpriority="high">
+
     <!-- Preconnect to image hosting domains -->
     <link rel="preconnect" href="https://img2.pic.in.th">
     <link rel="preconnect" href="https://img5.pic.in.th">
@@ -37,37 +42,44 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
     <style>
-      /* Ensure full-bleed layout by resetting margins */
       html, body {
         margin: 0;
         padding: 0;
         width: 100%;
+        scroll-behavior: smooth;
       }
 
-      /* Hide scrollbar for Chrome, Safari and Opera */
-      .no-scrollbar::-webkit-scrollbar {
-          display: none;
-      }
-      /* Hide scrollbar for IE, Edge and Firefox */
-      .no-scrollbar {
-          -ms-overflow-style: none;  /* IE and Edge */
-          scrollbar-width: none;  /* Firefox */
-      }
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
       
       body {
         background-color: #EFECE1;
         color: #1F1F1F;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
       }
 
-      /* Image loading transition for better UX */
+      /* Optimized Image Loading Strategy */
       img {
-        transition: opacity 0.5s ease-in-out;
+        content-visibility: auto;
+        transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1), transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        will-change: opacity, transform;
       }
-      img:not([src]) {
-        opacity: 0;
+      
+      /* Skeleton-like effect while loading */
+      .img-loading {
+        background: linear-gradient(110deg, #E5E1D3 8%, #EFECE1 18%, #E5E1D3 33%);
+        background-size: 200% 100%;
+        animation: 1.5s shine linear infinite;
       }
-      img[src] {
-        opacity: 1;
+      
+      @keyframes shine {
+        to { background-position-x: -200%; }
+      }
+
+      .parallax-img {
+        transform: translateZ(0); /* Force GPU acceleration */
+        backface-visibility: hidden;
       }
     </style>
   <script type="importmap">
