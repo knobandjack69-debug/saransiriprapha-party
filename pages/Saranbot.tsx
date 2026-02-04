@@ -1,14 +1,16 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Send, Bot, User, ArrowRight, ShieldAlert, Sparkles, Trash2, CheckCircle2, Search, BrainCircuit, AlertCircle, RefreshCw } from 'lucide-react';
+import { Send, Bot, User, ArrowRight, ShieldAlert, Sparkles, Trash2, CheckCircle2, Search, BrainCircuit, AlertCircle, RefreshCw, ZapOff } from 'lucide-react';
 import { GoogleGenAI } from '@google/genai';
-import { Content } from '../types';
+import { Content, Language } from '../types';
+import { CANDIDATES_DATA, POLICIES_DATA } from '../constants';
 
 interface Message {
   role: 'user' | 'bot';
   text: string;
   timestamp: Date;
+  isFallback?: boolean;
 }
 
 interface SaranbotProps {
@@ -37,7 +39,7 @@ export const Saranbot: React.FC<SaranbotProps> = ({ content }) => {
   useEffect(() => {
     const apiKey = process.env.API_KEY;
     if (!apiKey || apiKey === 'undefined' || apiKey === '') {
-      setApiError("Missing API Key: ระบบไม่พบ API Key สำหรับเชื่อมต่อ AI (โปรดตั้งค่า API_KEY ใน Environment Variables ของคุณ)");
+      setApiError("Missing API Key: ระบบไม่พบ API Key สำหรับเชื่อมต่อ AI");
     }
   }, []);
 
@@ -60,8 +62,58 @@ export const Saranbot: React.FC<SaranbotProps> = ({ content }) => {
     return () => clearInterval(interval);
   }, [isLoading]);
 
+  // --- LOCAL FALLBACK LOGIC ---
+  const generateFallbackResponse = (query: string): string => {
+    const q = query.toLowerCase();
+    const lang = Language.TH; // Default to TH for fallback logic
+    const policies = POLICIES_DATA(lang);
+    const candidates = CANDIDATES_DATA(lang);
+    
+    let response = "";
+    const buttons = [];
+
+    // 1. Keyword: Policy / นโยบาย
+    if (q.includes("นโยบาย") || q.includes("policy") || q.includes("ทำอะไร") || q.includes("มีอะไรบ้าง")) {
+      response += "### นโยบายหลักของพรรคศรัณศิริประภา\n\nเราเน้นการแก้ปัญหาที่เกิดขึ้นจริงด้วย 10 นโยบายหลักครับ:\n\n";
+      policies.slice(0, 5).forEach(p => {
+        response += `- **${p.title}**: ${p.summary}\n`;
+      });
+      response += `\nและยังมีนโยบายอื่นๆ อีกครับ เช่น ${policies[7].title} และ ${policies[9].title}`;
+      buttons.push("[Button: ดูนโยบายทั้งหมด | /policies]");
+    }
+    // 2. Keyword: Candidate / ทีมงาน / หัวหน้า / ประธาน
+    else if (q.includes("ทีมงาน") || q.includes("สมาชิก") || q.includes("ใคร") || q.includes("หัวหน้า") || q.includes("ประธาน") || q.includes("แชมป์")) {
+        const prez = candidates.find(c => c.id === "1");
+        response += `### ทีมงานพรรคศรัณศิริประภา\n\nนำทีมโดย **${prez?.name} (${prez?.nickname})** ผู้สมัครตำแหน่งประธานนักเรียนครับ\n\nวิสัยทัศน์: "${prez?.vision}"\n\nพร้อมด้วยคณะกรรมการนักเรียนที่มีความตั้งใจจริงอีก 9 ท่าน`;
+        buttons.push("[Button: ดูโฉมหน้าทีมงาน | /candidates]");
+    }
+    // 3. Keyword: Contact / ติดต่อ / ร้องเรียน
+    else if (q.includes("ติดต่อ") || q.includes("contact") || q.includes("ไอจี") || q.includes("ig") || q.includes("ร้องเรียน")) {
+        response += "### ช่องทางการติดต่อ\n\nสามารถติดตามข่าวสารหรือส่งข้อความหาเราได้ที่:\n- Instagram: @sarun.siriprapha\n- TikTok: @sarun.siriprapha\n\nหรือมาหาเราได้ที่ห้ององค์การนักเรียน อาคาร 3 ชั้น 2 ครับ";
+        buttons.push("[Button: ติดต่อเรา | /contact]");
+    }
+    // 4. Keyword: Why / ทำไม / ดีกว่า
+    else if (q.includes("ทำไม") || q.includes("เลือก") || q.includes("ดีไหม")) {
+        response += "### ทำไมต้องเบอร์ 3?\n\nเพราะเรา **No Drama เน้นแก้ปัญหา** ครับ เราไม่ขายฝัน แต่เราศึกษาปัญหาจริงในโรงเรียนและออกแบบนโยบายที่ทำได้จริง เช่น การแก้ปัญหาโรงอาหาร หรือพื้นที่ระบายความเครียด (No Drama Space) ครับ";
+        buttons.push("[Button: อ่านพันธกิจของเรา | /about]");
+    }
+    // Default Fallback
+    else {
+        response += "ขออภัยครับ ขณะนี้มีผู้ใช้งานจำนวนมาก ระบบ AI จึงทำงานล่าช้า แต่ผมขอแนะนำข้อมูลเบื้องต้นดังนี้ครับ:\n\n- พรรคศรัณศิริประภา (เบอร์ 3)\n- สโลแกน: **No Drama เน้นแก้ปัญหา**\n\nคุณสามารถดูข้อมูลฉบับเต็มได้ที่เมนูด้านล่างครับ";
+        buttons.push("[Button: ดูนโยบาย | /policies]");
+        buttons.push("[Button: ดูผู้สมัคร | /candidates]");
+    }
+
+    if (buttons.length > 0) {
+        response += "\n\n" + buttons.join(" ");
+    }
+
+    return response;
+  };
+
   const handleSendMessage = async (text: string) => {
     if (!text.trim() || isLoading) return;
+    // Reset API Error state visually, but keep logic ready to catch
     setApiError(null);
 
     const userMessage: Message = {
@@ -79,7 +131,7 @@ export const Saranbot: React.FC<SaranbotProps> = ({ content }) => {
       if (!apiKey) throw new Error("API Key is missing from environment.");
 
       const ai = new GoogleGenAI({ apiKey });
-      const history = messages.map(m => ({
+      const history = messages.filter(m => !m.isFallback).map(m => ({
         role: m.role === 'user' ? 'user' : 'model',
         parts: [{ text: m.text }]
       }));
@@ -112,25 +164,40 @@ export const Saranbot: React.FC<SaranbotProps> = ({ content }) => {
       setMessages(prev => [...prev, botMessage]);
     } catch (error: any) {
       console.error('Bot Error:', error);
-      let errorMessage = "ขออภัยครับ เกิดข้อผิดพลาดในการเชื่อมต่อกับ AI";
       
-      if (error.message?.includes("API_KEY_INVALID") || error.message?.includes("403") || error.message?.includes("401")) {
-        errorMessage = "API Key ไม่ถูกต้อง หรือไม่มีสิทธิ์เข้าถึง (403 Forbidden)";
-      } else if (error.message?.includes("429")) {
-        errorMessage = "คำขอมากเกินไป (Rate Limit Exceeded) กรุณารอสักครู่แล้วลองใหม่";
-      } else if (error.message?.includes("quota")) {
-        errorMessage = "โควต้าการใช้งาน API หมดแล้ว";
-      }
-
-      setApiError(errorMessage);
-      setMessages(prev => [...prev, {
+      // --- HYBRID FALLBACK MECHANISM ---
+      // If API fails (Quota, Rate Limit, Network), use local search
+      const fallbackText = generateFallbackResponse(text.trim());
+      
+      const botMessage: Message = {
         role: 'bot',
-        text: `⚠️ **ระบบขัดข้อง:** ${errorMessage}\n\n[Button: ติดต่อทีมงาน | /contact]`,
-        timestamp: new Date()
-      }]);
+        text: fallbackText,
+        timestamp: new Date(),
+        isFallback: true // Mark as fallback to show UI indicator
+      };
+
+      // Delay slightly to simulate processing
+      setTimeout(() => {
+        setMessages(prev => [...prev, botMessage]);
+        setIsLoading(false);
+        
+        // Optional: Show a subtle toast or indicator that we are in offline mode
+        if (error.message?.includes("429") || error.message?.includes("quota")) {
+           setApiError("ระบบ AI มีผู้ใช้งานจำนวนมาก กำลังตอบด้วยระบบสำรอง (Offline Mode)");
+        }
+      }, 1000);
+
+      // Return early so we don't trigger the finally block immediately inside the catch
+      return; 
     } finally {
-      setIsLoading(false);
+      // finally block will run if API succeeds, or if error is thrown before fallback logic (which shouldn't happen mostly)
+      // If we used fallback, we handled setIsLoading inside setTimeout
+      if (messages.length > 0 && !messages[messages.length - 1].isFallback) {
+         setIsLoading(false);
+      }
     }
+    // Determine loading state if not handled in catch
+    setIsLoading(false);
   };
 
   const clearChat = () => {
@@ -233,14 +300,11 @@ export const Saranbot: React.FC<SaranbotProps> = ({ content }) => {
       )}
 
       <div className="flex-1 max-w-5xl w-full mx-auto flex flex-col relative px-4 md:px-8">
-        {/* Error Notification Banner */}
+        {/* Error Notification Banner - Adjusted for Fallback Notice */}
         {apiError && (
-          <div className="mt-4 p-4 bg-rose-50 border border-rose-200 rounded-2xl flex items-center gap-4 text-rose-700 shadow-sm animate-pulse">
-            <AlertCircle className="shrink-0" />
+          <div className="mt-4 p-4 bg-orange-50 border border-orange-200 rounded-2xl flex items-center gap-4 text-orange-800 shadow-sm animate-pulse">
+            <ZapOff className="shrink-0" size={18} />
             <div className="flex-1 text-sm font-medium">{apiError}</div>
-            <button onClick={() => window.location.reload()} className="p-2 hover:bg-rose-100 rounded-full transition-colors">
-              <RefreshCw size={18} />
-            </button>
           </div>
         )}
 
@@ -301,6 +365,12 @@ export const Saranbot: React.FC<SaranbotProps> = ({ content }) => {
                 ? 'bg-party-rose text-white rounded-tr-none' 
                 : 'bg-white border border-party-black/5 text-party-black rounded-tl-none'
               }`}>
+                {m.isFallback && (
+                    <div className="mb-3 flex items-center gap-2 text-xs font-bold text-orange-500 uppercase tracking-widest bg-orange-50 p-2 rounded-lg inline-block">
+                        <ZapOff size={12} />
+                        Offline Mode
+                    </div>
+                )}
                 {renderMessageContent(m.text)}
                 <div className={`text-[10px] mt-6 font-black uppercase tracking-[0.2em] opacity-40 ${m.role === 'user' ? 'text-right' : ''}`}>
                   {m.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • {m.role === 'user' ? 'Member Voice' : 'Saran Bot Analysis'}
