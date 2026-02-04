@@ -192,6 +192,15 @@ export const Policies: React.FC<PoliciesProps> = ({ content }) => {
           .grabbing {
             cursor: grabbing !important;
           }
+          @keyframes music-bar {
+            0% { height: 20%; }
+            50% { height: 100%; }
+            100% { height: 20%; }
+          }
+          @keyframes fadeIn {
+            0% { opacity: 0; transform: translateY(20px); }
+            100% { opacity: 1; transform: translateY(0); }
+          }
         `}</style>
         
         <div className="fixed inset-0 z-0 pointer-events-none">
@@ -314,6 +323,107 @@ export const Policies: React.FC<PoliciesProps> = ({ content }) => {
                                 <h1 className="text-4xl md:text-7xl font-serif font-bold text-party-black max-w-3xl leading-[1.1]">{activePolicy.title}</h1>
                              </div>
                         </div>
+
+                        {/* ADDED CONTENT SECTION START */}
+                        <div className="grid grid-cols-1 md:grid-cols-12 gap-12 animate-[fadeIn_0.8s_ease-out_0.3s] opacity-0 fill-mode-forwards" style={{ animationFillMode: 'forwards' }}>
+                            {/* Left Sidebar: Controls */}
+                            <div className="md:col-span-4 space-y-6">
+                                {/* Audio Card */}
+                                <div className="p-6 bg-white rounded-[2rem] border border-party-black/5 shadow-xl">
+                                    <div className="flex items-center justify-between mb-6">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 bg-party-rose/10 rounded-full flex items-center justify-center text-party-rose">
+                                                <Info size={20} />
+                                            </div>
+                                            <span className="text-xs font-bold uppercase tracking-wider text-party-black/60">Audio Brief</span>
+                                        </div>
+                                        {/* Visualizer */}
+                                        <div className="flex gap-1 h-5 items-end">
+                                            {[...Array(5)].map((_, i) => (
+                                                <div key={i} className={`w-1.5 bg-party-rose rounded-full transition-all duration-300 ${playingId === activePolicy.id ? 'animate-music-bar' : 'h-1.5 opacity-30'}`} style={{ animationDelay: `${i * 0.1}s` }}></div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                    <button 
+                                        onClick={() => handlePlayAudio(activePolicy.id, activePolicy.audioUrl)}
+                                        className="w-full py-4 bg-party-black text-white rounded-2xl font-bold flex items-center justify-center gap-3 hover:bg-party-rose transition-all shadow-lg active:scale-95 group"
+                                    >
+                                        {playingId === activePolicy.id ? <Pause size={20} /> : <Play size={20} className="ml-1" />}
+                                        {playingId === activePolicy.id ? content.policyPage.pauseBtn : content.policyPage.listenBtn}
+                                    </button>
+                                </div>
+
+                                {/* Download Card */}
+                                <button 
+                                    onClick={handleDownloadCard}
+                                    disabled={isGenerating}
+                                    className="w-full py-4 bg-white border-2 border-party-black/5 text-party-black rounded-[2rem] font-bold flex items-center justify-center gap-3 hover:border-party-rose/20 hover:shadow-xl transition-all active:scale-95 disabled:opacity-50"
+                                >
+                                    {isGenerating ? <div className="w-5 h-5 border-2 border-party-black/20 border-t-party-rose rounded-full animate-spin"></div> : <Share2 size={20} />}
+                                    {content.policyPage.saveBtn}
+                                </button>
+                            </div>
+
+                            {/* Right Content: Details */}
+                            <div className="md:col-span-8 space-y-12">
+                                <div className="relative pl-8 border-l-2 border-party-rose/20">
+                                    <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-party-rose ring-4 ring-party-cream"></div>
+                                    <h3 className="text-xl font-sans font-bold text-party-rose mb-4 uppercase tracking-widest">{content.policyPage.whyLabel}</h3>
+                                    <p className="text-xl md:text-2xl font-serif text-party-black leading-relaxed">
+                                        {activePolicy.why}
+                                    </p>
+                                </div>
+
+                                <div className="relative pl-8 border-l-2 border-party-black/10">
+                                    <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-party-black ring-4 ring-party-cream"></div>
+                                    <h3 className="text-xl font-sans font-bold text-party-black/40 mb-4 uppercase tracking-widest">{content.policyPage.whatLabel}</h3>
+                                    <p className="text-lg md:text-xl font-serif text-party-black/80 leading-relaxed">
+                                        {activePolicy.what}
+                                    </p>
+                                </div>
+
+                                <div className="relative pl-8 border-l-2 border-party-black/10">
+                                    <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-white border-2 border-party-black ring-4 ring-party-cream"></div>
+                                    <h3 className="text-xl font-sans font-bold text-party-black/40 mb-4 uppercase tracking-widest">{content.policyPage.howLabel}</h3>
+                                    <div className="p-8 bg-white/60 rounded-[2rem] border border-party-black/5">
+                                        <p className="text-lg md:text-xl font-serif text-party-black/80 leading-relaxed">
+                                            {activePolicy.how}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {/* ADDED CONTENT SECTION END */}
+                        
+                        {/* Hidden Card for Image Generation */}
+                        <div className="absolute -left-[9999px] top-0">
+                            <div id="policy-vertical-card" className="w-[600px] bg-[#EFECE1] p-10 flex flex-col gap-8 font-serif relative overflow-hidden">
+                                <div className="absolute top-0 right-0 w-64 h-64 bg-[#B93847]/5 rounded-full -translate-y-1/2 translate-x-1/2"></div>
+                                <div className="flex items-center justify-between">
+                                    <span className="text-[#B93847] font-bold tracking-[0.2em] text-sm uppercase border border-[#B93847]/20 px-4 py-2 rounded-full bg-white">Sarunsiriprapha No.3</span>
+                                    <span className="text-6xl font-black text-[#1F1F1F]/5">#{String(activePolicy.id).padStart(2, '0')}</span>
+                                </div>
+                                
+                                <h1 className="text-5xl font-bold text-[#1F1F1F] leading-tight">{activePolicy.title}</h1>
+                                
+                                <div className="w-full aspect-[4/3] rounded-3xl overflow-hidden shadow-lg">
+                                    <img src={activePolicy.imageUrl} className="w-full h-full object-cover" crossOrigin="anonymous" />
+                                </div>
+                                
+                                <div className="space-y-6">
+                                    <div className="p-6 bg-white/60 rounded-3xl border border-[#1F1F1F]/5">
+                                        <h3 className="text-[#B93847] font-bold text-xs uppercase tracking-widest mb-3">{content.policyPage.whyLabel}</h3>
+                                        <p className="text-xl leading-relaxed text-[#1F1F1F]">{activePolicy.why}</p>
+                                    </div>
+                                </div>
+                                
+                                <div className="pt-6 border-t border-[#1F1F1F]/10 flex justify-between items-center">
+                                    <div className="text-xs text-[#1F1F1F]/40 uppercase tracking-[0.3em] font-bold">No Drama Spirit</div>
+                                    <div className="w-12 h-12 rounded-full bg-[#B93847] text-white flex items-center justify-center font-bold text-lg shadow-lg">SR</div>
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
             )}
